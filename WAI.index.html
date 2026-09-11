@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBW / DWPD 雙向計算工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-2xl font-bold tracking-wider">硬碟壽命計算工具</h1>
+            <p class="text-blue-100 text-sm mt-1">TBW, DWPD & WAI 整合計算</p>
+        </div>
+
+        <div class="p-6">
+            <!-- 設定網格，桌面版雙欄，手機版單欄 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- ================= 左側欄位：WAI & 進階 TBW ================= -->
+                <div class="space-y-6">
+                    
+                    <!-- WAI 計算區域 -->
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            計算 WAI 
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- NAND 寫入量 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">NAND flash write</label>
+                                <div class="flex">
+                                    <input type="text" id="nandWrites" placeholder="例如: 1a4fech 或 1724396" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <select id="nandBase" class="bg-gray-100 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-lg text-gray-700 outline-none">
+                                        <option value="16">16進位 (Hex)</option>
+                                        <option value="10">10進位 (Dec)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Host 寫入量 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Host Writes</label>
+                                <div class="flex">
+                                    <input type="text" id="hostWrites" placeholder="例如: 9787ch 或 620668" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    <select id="hostBase" class="bg-gray-100 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-lg text-gray-700 outline-none">
+                                        <option value="16">16進位 (Hex)</option>
+                                        <option value="10">10進位 (Dec)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- WAI 結果 -->
+                            <div class="pt-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">WAI</label>
+                                <input type="number" id="waiResult" readonly placeholder="自動計算" 
+                                    class="w-full px-4 py-2 bg-green-50 border border-green-200 rounded-lg text-green-800 font-bold outline-none cursor-not-allowed">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 進階 TBW 計算區域 -->
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            TBW
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- PE Cycle -->
+                            <div>
+                                <label for="peCycle" class="block text-sm font-medium text-gray-700 mb-1">P/E Cycle</label>
+                                <input type="number" id="peCycle" value="3000" min="1" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+
+                            <!-- 同步的硬碟容量 (左側) -->
+                            <div>
+                                <label for="advCapacity" class="block text-sm font-medium text-gray-700 mb-1">硬碟容量</label>
+                                <div class="flex">
+                                    <input type="number" id="advCapacity" value="1024" min="1" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                                    <select id="advUnit" class="bg-gray-100 px-4 py-2 border-t border-b border-r border-gray-300 rounded-r-lg text-gray-700 outline-none">
+                                        <option value="GB">GB</option>
+                                        <option value="TB">TB</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 進階 TBW 結果 -->
+                            <div class="pt-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">TBW</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="advTbwResult" readonly placeholder="自動計算" 
+                                        class="w-full px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg text-lg font-bold text-blue-900 outline-none cursor-not-allowed">
+                                    <button onclick="applyAdvTbwToRight()" class="px-3 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm whitespace-nowrap text-sm" title="將此數值帶入右側計算DWPD">
+                                        帶入右側 ➔
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ================= 右側欄位：基本規格 & 雙向計算 ================= -->
+                <div class="space-y-6">
+                    
+                    <!-- 基礎設定區域 -->
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                            硬碟規格
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- 保固期輸入 -->
+                            <div>
+                                <label for="warranty" class="block text-sm font-medium text-gray-700 mb-1">保固期 (年)</label>
+                                <input type="number" id="warranty" value="3" min="0.1" step="0.1" 
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                            </div>
+
+                            <!-- 硬碟容量輸入 -->
+                            <div>
+                                <label for="capacity" class="block text-sm font-medium text-gray-700 mb-1">硬碟容量</label>
+                                <div class="flex">
+                                    <input type="number" id="capacity" value="1024" min="1" 
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
+                                    <select id="unit" class="bg-gray-100 px-4 py-2 border-t border-b border-r border-gray-300 rounded-r-lg text-gray-700 outline-none">
+                                        <option value="GB">GB</option>
+                                        <option value="TB">TB</option>
+                                    </select>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1 pl-1">備註：計算進階 TBW 時，1 TB = 1024 GB；計算 DWPD 時，1 TB = 1000 GB 依業界慣例。</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 計算區域 -->
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 shadow-sm">
+                        <h2 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            輸入任一數值進行雙向計算
+                        </h2>
+                        
+                        <div class="space-y-2">
+                            <!-- TBW 輸入/輸出 -->
+                            <div>
+                                <label for="tbw" class="block text-sm font-medium text-gray-700 mb-1">TBW </label>
+                                <input type="number" id="tbw" placeholder="例如: 200 或從左側帶入" 
+                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-blue-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors">
+                            </div>
+
+                            <!-- 雙向箭頭圖示 -->
+                            <div class="flex justify-center text-gray-400 py-1">
+                                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                </svg>
+                            </div>
+
+                            <!-- DWPD 輸入/輸出 -->
+                            <div>
+                                <label for="dwpd" class="block text-sm font-medium text-gray-700 mb-1">DWPD </label>
+                                <input type="number" id="dwpd" placeholder="例如: 1" 
+                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-purple-900 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition-colors">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= 元素定義 =================
+        // 基礎規格
+        const warrantyInput = document.getElementById('warranty');
+        const capacityInput = document.getElementById('capacity');
+        const unitSelect = document.getElementById('unit');
+        
+        // 雙向計算
+        const tbwInput = document.getElementById('tbw');
+        const dwpdInput = document.getElementById('dwpd');
+        let lastEdited = 'tbw'; 
+
+        // WAI & 進階 TBW
+        const nandWrites = document.getElementById('nandWrites');
+        const nandBase = document.getElementById('nandBase');
+        const hostWrites = document.getElementById('hostWrites');
+        const hostBase = document.getElementById('hostBase');
+        const waiResult = document.getElementById('waiResult');
+        const peCycle = document.getElementById('peCycle');
+        const advTbwResult = document.getElementById('advTbwResult');
+        
+        // 左側同步硬碟容量
+        const advCapacityInput = document.getElementById('advCapacity');
+        const advUnitSelect = document.getElementById('advUnit');
+
+        // ================= WAI 與 進階 TBW 邏輯 =================
+
+        // 解析輸入值 (支援 10 進位 與 16 進位(含結尾h或開頭0x))
+        function parseCustomNumber(val, base) {
+            val = val.trim().toLowerCase();
+            if (val === '') return NaN;
+
+            if (base === '16') {
+                if (val.endsWith('h')) val = val.slice(0, -1);
+                if (val.startsWith('0x')) val = val.slice(2);
+                return parseInt(val, 16);
+            } else {
+                return parseFloat(val);
+            }
+        }
+
+        function calculateWAIAndAdvTBW() {
+            // 1. 計算 WAI
+            const nandDec = parseCustomNumber(nandWrites.value, nandBase.value);
+            const hostDec = parseCustomNumber(hostWrites.value, hostBase.value);
+
+            let wai = NaN;
+            if (!isNaN(nandDec) && !isNaN(hostDec) && hostDec !== 0) {
+                wai = nandDec / hostDec;
+                waiResult.value = wai.toFixed(2);
+            } else {
+                waiResult.value = '';
+            }
+
+            // 2. 計算進階 TBW
+            const capVal = parseFloat(capacityInput.value);
+            const isTB = (unitSelect.value === 'TB');
+            const peVal = parseFloat(peCycle.value);
+
+            // 依據公式，此處容量使用 GB 計算 (1 TB = 1024 GB)
+            const capGB = isTB ? capVal * 1024 : capVal;
+
+            if (!isNaN(wai) && !isNaN(capGB) && !isNaN(peVal) && wai > 0) {
+                // 公式：容量(GB) x PE cycle / WAI / 1024
+                const calcTbw = (capGB * peVal) / wai / 1024;
+                advTbwResult.value = Math.round(calcTbw); // 四捨五入至整數
+            } else {
+                advTbwResult.value = '';
+            }
+        }
+
+        // 將左側計算出的進階 TBW 帶入右側欄位，並觸發 DWPD 重新計算
+        function applyAdvTbwToRight() {
+            if (advTbwResult.value && !isNaN(advTbwResult.value)) {
+                tbwInput.value = advTbwResult.value;
+                calculateDWPD(); // 觸發右側重新計算
+                
+                // 增加一點視覺提示效果
+                tbwInput.classList.add('bg-green-100');
+                setTimeout(() => tbwInput.classList.remove('bg-green-100'), 500);
+            }
+        }
+
+        // ================= 雙向計算邏輯 (TBW <-> DWPD) =================
+
+        // 取得以 TB 為單位的硬碟容量 (DWPD 一般業界慣例 1TB=1000GB)
+        function getCapacityInTBForDWPD() {
+            const capacity = parseFloat(capacityInput.value);
+            if (isNaN(capacity) || capacity <= 0) return 0;
+            return unitSelect.value === 'GB' ? capacity / 1000 : capacity;
+        }
+
+        function getWarrantyYears() {
+            const years = parseFloat(warrantyInput.value);
+            if (isNaN(years) || years <= 0) return 0;
+            return years;
+        }
+
+        function calculateDWPD() {
+            const tbw = parseFloat(tbwInput.value);
+            const capTB = getCapacityInTBForDWPD();
+            const years = getWarrantyYears();
+
+            if (isNaN(tbw) || capTB === 0 || years === 0) {
+                if(tbwInput.value === '') dwpdInput.value = '';
+                return;
+            }
+
+            const dwpd = tbw / (capTB * 365 * years);
+            dwpdInput.value = Number.isInteger(dwpd) ? dwpd : parseFloat(dwpd.toFixed(4));
+            lastEdited = 'tbw';
+        }
+
+        function calculateTBW() {
+            const dwpd = parseFloat(dwpdInput.value);
+            const capTB = getCapacityInTBForDWPD();
+            const years = getWarrantyYears();
+
+            if (isNaN(dwpd) || capTB === 0 || years === 0) {
+                if(dwpdInput.value === '') tbwInput.value = '';
+                return;
+            }
+
+            const tbw = dwpd * capTB * 365 * years;
+            tbwInput.value = Number.isInteger(tbw) ? tbw : parseFloat(tbw.toFixed(2));
+            lastEdited = 'dwpd';
+        }
+
+        function handleBaseSettingChange() {
+            // 右側雙向計算處理
+            if (lastEdited === 'tbw' && tbwInput.value !== '') {
+                calculateDWPD(); 
+            } else if (lastEdited === 'dwpd' && dwpdInput.value !== '') {
+                calculateTBW();  
+            }
+            
+            // 左側進階 TBW 處理 (因為改變了硬碟容量)
+            calculateWAIAndAdvTBW();
+        }
+
+        // 同步左右兩側的容量欄位
+        function handleLeftCapacityChange() {
+            capacityInput.value = advCapacityInput.value;
+            unitSelect.value = advUnitSelect.value;
+            handleBaseSettingChange();
+        }
+
+        function handleRightCapacityChange() {
+            advCapacityInput.value = capacityInput.value;
+            advUnitSelect.value = unitSelect.value;
+            handleBaseSettingChange();
+        }
+
+        // ================= 綁定事件監聽器 =================
+        
+        // 左側 WAI & Adv TBW 相關事件
+        nandWrites.addEventListener('input', calculateWAIAndAdvTBW);
+        hostWrites.addEventListener('input', calculateWAIAndAdvTBW);
+        nandBase.addEventListener('change', calculateWAIAndAdvTBW);
+        hostBase.addEventListener('change', calculateWAIAndAdvTBW);
+        peCycle.addEventListener('input', calculateWAIAndAdvTBW);
+
+        advCapacityInput.addEventListener('input', handleLeftCapacityChange);
+        advUnitSelect.addEventListener('change', handleLeftCapacityChange);
+
+        // 右側雙向計算相關事件
+        tbwInput.addEventListener('input', calculateDWPD);
+        dwpdInput.addEventListener('input', calculateTBW);
+        
+        // 基礎設定相關事件 (同時影響左右側)
+        warrantyInput.addEventListener('input', handleBaseSettingChange);
+        capacityInput.addEventListener('input', handleRightCapacityChange);
+        unitSelect.addEventListener('change', handleRightCapacityChange);
+
+    </script>
+</body>
+</html>
