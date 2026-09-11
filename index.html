@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> WAI/TBW/DWPD 計算工具</title>
+    
+    <!-- 社群軟體預覽設定開始 -->
+    <title>SSD 壽命計算機 (TBW / DWPD / WAI)</title>
+    
     <!-- 網頁內容描述 (這就是 LINE 會抓取的內文) -->
-    <meta name="description" content="快速計算硬碟的TBW、DWPD與WAI">
+    <meta name="description" content="快速計算固態硬碟的 TBW (總寫入量)、DWPD (每日全碟寫入次數) 與 WAI (寫入放大率)。支援 10 進位與 16 進位數值自動轉換。">
+    
     <!-- Open Graph 標籤 (給 Facebook, LINE 等抓取標題和敘述用的標準格式) -->
-    <meta property="og:title" content="WAI/TBW/DWPD 計算工具">
-    <meta property="og:description" content="快速計算硬碟的TBW、DWPD與WAI">
+    <meta property="og:title" content="SSD 壽命計算機 (TBW / DWPD / WAI)">
+    <meta property="og:description" content="快速計算固態硬碟的 TBW (總寫入量)、DWPD (每日全碟寫入次數) 與 WAI (寫入放大率)。支援數值轉換與雙向計算。">
     <meta property="og:type" content="website">
     <!-- 社群軟體預覽設定結束 -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -25,7 +30,7 @@
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl overflow-hidden">
         <!-- Header -->
         <div class="bg-blue-600 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold tracking-wider">硬碟壽命計算工具</h1>
+            <h1 class="text-2xl font-bold tracking-wider">固態硬碟壽命計算工具</h1>
             <p class="text-blue-100 text-sm mt-1">TBW, DWPD & WAI 整合計算</p>
         </div>
 
@@ -43,6 +48,15 @@
                             計算 WAI 
                         </h2>
                         
+                        <!-- 新增檔案上傳區域 -->
+                        <div class="mb-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center relative hover:bg-gray-100 transition-colors">
+                            <input type="file" id="logFileInput" accept=".log,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                            <span class="text-sm text-gray-500 font-medium text-center">點擊或拖曳上傳 JEDEC Log 檔案</span>
+                            <span class="text-xs text-gray-400 mt-1 text-center">自動解析 Total LBAs Written (ID 241) & Vendor Specific (ID 245)</span>
+                            <div id="fileUploadStatus" class="mt-2 text-xs font-semibold text-green-600 hidden"></div>
+                        </div>
+
                         <div class="space-y-4">
                             <!-- NAND 寫入量 -->
                             <div>
@@ -166,8 +180,8 @@
                         <div class="space-y-2">
                             <!-- TBW 輸入/輸出 -->
                             <div>
-                                <label for="tbw" class="block text-sm font-medium text-gray-700 mb-1">TBW </label>
-                                <input type="number" id="tbw" placeholder="例如: 200 或從左側帶入" 
+                                <label for="tbw" class="block text-sm font-medium text-gray-700 mb-1">TBW (總寫入量 - Terabytes)</label>
+                                <input type="number" id="tbw" placeholder="例如: 365 或從左側帶入" 
                                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-blue-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors">
                             </div>
 
@@ -180,7 +194,7 @@
 
                             <!-- DWPD 輸入/輸出 -->
                             <div>
-                                <label for="dwpd" class="block text-sm font-medium text-gray-700 mb-1">DWPD </label>
+                                <label for="dwpd" class="block text-sm font-medium text-gray-700 mb-1">DWPD (每日全碟寫入次數)</label>
                                 <input type="number" id="dwpd" placeholder="例如: 1" 
                                     class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-purple-900 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition-colors">
                             </div>
@@ -213,6 +227,10 @@
         const peCycle = document.getElementById('peCycle');
         const advTbwResult = document.getElementById('advTbwResult');
         
+        // 檔案上傳
+        const logFileInput = document.getElementById('logFileInput');
+        const fileUploadStatus = document.getElementById('fileUploadStatus');
+
         // 左側同步硬碟容量
         const advCapacityInput = document.getElementById('advCapacity');
         const advUnitSelect = document.getElementById('advUnit');
@@ -339,10 +357,89 @@
             handleBaseSettingChange();
         }
 
+        // 新增這段缺失的函式
         function handleRightCapacityChange() {
             advCapacityInput.value = capacityInput.value;
             advUnitSelect.value = unitSelect.value;
             handleBaseSettingChange();
+        }
+
+        // ================= 檔案上傳與解析邏輯 =================
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                fileUploadStatus.classList.add('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                let lastId241Value = null;
+                let lastId245Value = null;
+
+                // 由後往前尋找，確保抓到的是最後一次（Latest）的數值
+                for (let i = lines.length - 1; i >= 0; i--) {
+                    const line = lines[i].trim();
+                    // 正規表達式尋找 ID 241 和 245
+                    // 格式: ID 241 0032h 64h 64h 00000009787ch 00h Total LBAs Written
+                    // 我們需要的是第5個欄位，包含 'h' 的 16 進位字串
+                    const match241 = line.match(/^ID\s+241\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+([\da-fA-F]+h)\s+[\da-fA-F]+h\s+Total LBAs Written/i);
+                    const match245 = line.match(/^ID\s+245\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+([\da-fA-F]+h)\s+[\da-fA-F]+h\s+Vendor Specific/i);
+
+                    if (match241 && !lastId241Value) {
+                        // 移除前面的 0 和確保有 h 結尾
+                        let val = match241[1].toLowerCase();
+                        val = val.replace(/^0+/, ''); // 移除前導 0
+                        if (val === 'h') val = '0h';  // 如果全是 0，保留 0h
+                        lastId241Value = val;
+                    }
+
+                    if (match245 && !lastId245Value) {
+                        let val = match245[1].toLowerCase();
+                        val = val.replace(/^0+/, '');
+                        if (val === 'h') val = '0h';
+                        lastId245Value = val;
+                    }
+
+                    // 如果兩個都找到了，就不用繼續往前找了
+                    if (lastId241Value && lastId245Value) {
+                        break;
+                    }
+                }
+
+                // 更新畫面
+                if (lastId241Value && lastId245Value) {
+                    hostWrites.value = lastId241Value;
+                    nandWrites.value = lastId245Value;
+                    
+                    // 強制設定為 16 進位
+                    hostBase.value = '16';
+                    nandBase.value = '16';
+                    
+                    calculateWAIAndAdvTBW();
+
+                    // 顯示成功訊息
+                    fileUploadStatus.textContent = '解析成功！已載入最新數值。';
+                    fileUploadStatus.className = 'mt-2 text-xs font-semibold text-green-600';
+                    fileUploadStatus.classList.remove('hidden');
+                } else {
+                    // 顯示錯誤訊息
+                    fileUploadStatus.textContent = '無法在檔案中找到完整的 ID 241 或 ID 245 數值。';
+                    fileUploadStatus.className = 'mt-2 text-xs font-semibold text-red-600';
+                    fileUploadStatus.classList.remove('hidden');
+                }
+            };
+            
+            reader.onerror = function() {
+                fileUploadStatus.textContent = '檔案讀取失敗。';
+                fileUploadStatus.className = 'mt-2 text-xs font-semibold text-red-600';
+                fileUploadStatus.classList.remove('hidden');
+            };
+
+            reader.readAsText(file);
         }
 
         // ================= 綁定事件監聽器 =================
@@ -365,6 +462,9 @@
         warrantyInput.addEventListener('input', handleBaseSettingChange);
         capacityInput.addEventListener('input', handleRightCapacityChange);
         unitSelect.addEventListener('change', handleRightCapacityChange);
+
+        // 檔案上傳事件
+        logFileInput.addEventListener('change', handleFileUpload);
 
     </script>
 </body>
