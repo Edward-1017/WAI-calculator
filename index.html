@@ -35,6 +35,39 @@
         </div>
 
         <div class="p-6">
+            <!-- 頂部獨立區域 (檔案上傳與裝置資訊) -->
+            <div class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <!-- 上傳區 -->
+                <div class="col-span-1 flex flex-col justify-center border-2 border-dashed border-blue-300 rounded-lg p-6 bg-blue-50 relative hover:bg-blue-100 transition-colors">
+                    <input type="file" id="logFileInput" accept=".log,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <div class="text-center flex flex-col items-center pointer-events-none">
+                        <svg class="w-8 h-8 text-blue-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        <span class="text-sm font-bold text-blue-900">匯入 JEDEC Log 檔案</span>
+                        <span class="text-xs text-blue-700 mt-1">自動解析 Device, Capacity 與寫入量</span>
+                    </div>
+                </div>
+                
+                <!-- 裝置資訊區 -->
+                <div class="col-span-2 flex flex-col justify-center pl-0 md:pl-4 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0">
+                    <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Device Information</h3>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Device Name</div>
+                            <div id="displayDeviceName" class="font-bold text-blue-600 text-lg break-all">尚未載入</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Device FW</div>
+                            <div id="displayDeviceFW" class="font-bold text-blue-600 text-lg break-all">尚未載入</div>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Capacity</div>
+                            <div id="displayCapacity" class="font-bold text-blue-600 text-lg">尚未載入</div>
+                        </div>
+                    </div>
+                    <div id="fileUploadStatus" class="mt-3 text-sm font-semibold text-green-600 hidden"></div>
+                </div>
+            </div>
+
             <!-- 設定網格，桌面版雙欄，手機版單欄 -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
@@ -47,15 +80,6 @@
                             <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             計算 WAI 
                         </h2>
-                        
-                        <!-- 新增檔案上傳區域 -->
-                        <div class="mb-4 p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex flex-col items-center justify-center relative hover:bg-gray-100 transition-colors">
-                            <input type="file" id="logFileInput" accept=".log,.txt" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                            <svg class="w-6 h-6 text-gray-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                            <span class="text-sm text-gray-500 font-medium text-center">點擊或拖曳上傳 JEDEC Log 檔案</span>
-                            <span class="text-xs text-gray-400 mt-1 text-center">自動解析 Total LBAs Written (ID 241) & Vendor Specific (ID 245)</span>
-                            <div id="fileUploadStatus" class="mt-2 text-xs font-semibold text-green-600 hidden"></div>
-                        </div>
 
                         <div class="space-y-4">
                             <!-- NAND 寫入量 -->
@@ -110,7 +134,7 @@
 
                             <!-- 同步的硬碟容量 (左側) -->
                             <div>
-                                <label for="advCapacity" class="block text-sm font-medium text-gray-700 mb-1">Device Capacity (GB)</label>
+                                <label for="advCapacity" class="block text-sm font-medium text-gray-700 mb-1">Device Capacity</label>
                                 <div class="flex">
                                     <input type="number" id="advCapacity" value="1024" min="1" 
                                         class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
@@ -156,7 +180,7 @@
 
                             <!-- 硬碟容量輸入 -->
                             <div>
-                                <label for="capacity" class="block text-sm font-medium text-gray-700 mb-1">Device Capacity (GB)</label>
+                                <label for="capacity" class="block text-sm font-medium text-gray-700 mb-1">Device Capacity</label>
                                 <div class="flex">
                                     <input type="number" id="capacity" value="1024" min="1" 
                                         class="w-full px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 outline-none transition-colors">
@@ -196,7 +220,7 @@
                             <div>
                                 <label for="dwpd" class="block text-sm font-medium text-gray-700 mb-1">DWPD</label>
                                 <input type="number" id="dwpd" placeholder="例如: 1" 
-                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-purple-900 focus:ring-2 focus:ring-purple-600 focus:border-purple-600 outline-none transition-colors">
+                                    class="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-lg font-bold text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-colors">
                             </div>
                         </div>
                     </div>
@@ -357,7 +381,7 @@
             handleBaseSettingChange();
         }
 
-        // 新增這段缺失的函式
+        // 同步左右兩側的容量欄位
         function handleRightCapacityChange() {
             advCapacityInput.value = capacityInput.value;
             advUnitSelect.value = unitSelect.value;
@@ -379,18 +403,68 @@
                 
                 let lastId241Value = null;
                 let lastId245Value = null;
+                let rawDeviceName = "未知";
+                let deviceCapacity = null;
+                let deviceUnit = "GB";
+
+                // 由上往下尋找裝置資訊
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (rawDeviceName === "未知") {
+                        const nameMatch = line.match(/(?:Device Name\s*:|DEVICE NAME:)\s*(.+)/i);
+                        if (nameMatch) rawDeviceName = nameMatch[1].trim();
+                    }
+                    if (!deviceCapacity) {
+                        const capMatch = line.match(/(?:Device Capacity\s*:|Capacity\s*=)\s*([\d\.]+)\s*(GB|TB|G|T)/i);
+                        if (capMatch) {
+                            deviceCapacity = parseFloat(capMatch[1]);
+                            deviceUnit = capMatch[2].toUpperCase().startsWith('T') ? 'TB' : 'GB';
+                        }
+                    }
+                    if (rawDeviceName !== "未知" && deviceCapacity !== null) break;
+                }
+
+                // 解析 Device Name 和 Device FW
+                let parsedDeviceName = rawDeviceName;
+                let parsedDeviceFW = "未知";
+                
+                if (rawDeviceName !== "未知") {
+                    // 將字串以一個或多個空白分割
+                    const nameParts = rawDeviceName.split(/\s+/);
+                    if (nameParts.length > 0) {
+                        parsedDeviceName = nameParts[0]; // 第一個值作為 Device Name
+                    }
+                    if (nameParts.length >= 3) {
+                        parsedDeviceFW = nameParts[2]; // 第三個值作為 Device FW
+                    }
+                }
+
+                // 將 Capacity 取整數
+                let displayCapacityValue = deviceCapacity ? Math.round(deviceCapacity) : null;
+
+                // 更新頂部裝置資訊 UI
+                document.getElementById('displayDeviceName').textContent = parsedDeviceName;
+                document.getElementById('displayDeviceFW').textContent = parsedDeviceFW;
+                document.getElementById('displayCapacity').textContent = displayCapacityValue ? `${displayCapacityValue} ${deviceUnit}` : "未知";
+
+                // 自動帶入硬碟容量並同步左右欄位
+                if (deviceCapacity) {
+                    const roundedCap = Math.round(deviceCapacity);
+                    capacityInput.value = roundedCap;
+                    advCapacityInput.value = roundedCap;
+                    unitSelect.value = deviceUnit;
+                    advUnitSelect.value = deviceUnit;
+                }
 
                 // 由後往前尋找，確保抓到的是最後一次（Latest）的數值
                 for (let i = lines.length - 1; i >= 0; i--) {
                     const line = lines[i].trim();
                     // 正規表達式尋找 ID 241 和 245
                     // 格式: ID 241 0032h 64h 64h 00000009787ch 00h Total LBAs Written
-                    // 我們需要的是第5個欄位，包含 'h' 的 16 進位字串
                     const match241 = line.match(/^ID\s+241\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+([\da-fA-F]+h)\s+[\da-fA-F]+h\s+Total LBAs Written/i);
                     const match245 = line.match(/^ID\s+245\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+[\da-fA-F]+h\s+([\da-fA-F]+h)\s+[\da-fA-F]+h\s+Vendor Specific/i);
 
                     if (match241 && !lastId241Value) {
-                        // 移除前面的 0 和確保有 h 結尾
                         let val = match241[1].toLowerCase();
                         val = val.replace(/^0+/, ''); // 移除前導 0
                         if (val === 'h') val = '0h';  // 如果全是 0，保留 0h
@@ -410,7 +484,7 @@
                     }
                 }
 
-                // 更新畫面
+                // 進行更新畫面及計算
                 if (lastId241Value && lastId245Value) {
                     hostWrites.value = lastId241Value;
                     nandWrites.value = lastId245Value;
@@ -419,16 +493,20 @@
                     hostBase.value = '16';
                     nandBase.value = '16';
                     
-                    calculateWAIAndAdvTBW();
+                    // 執行連動計算 (涵蓋容量與WAI)
+                    handleBaseSettingChange();
 
                     // 顯示成功訊息
-                    fileUploadStatus.textContent = '解析成功！已載入最新數值。';
-                    fileUploadStatus.className = 'mt-2 text-xs font-semibold text-green-600';
+                    fileUploadStatus.textContent = '✔ 解析成功！已自動帶入數值並完成計算。';
+                    fileUploadStatus.className = 'mt-3 text-sm font-semibold text-green-600';
                     fileUploadStatus.classList.remove('hidden');
                 } else {
-                    // 顯示錯誤訊息
-                    fileUploadStatus.textContent = '無法在檔案中找到完整的 ID 241 或 ID 245 數值。';
-                    fileUploadStatus.className = 'mt-2 text-xs font-semibold text-red-600';
+                    // 若沒找到寫入量，但有找到容量，一樣觸發連動計算
+                    handleBaseSettingChange();
+                    
+                    // 顯示錯誤/警告訊息
+                    fileUploadStatus.textContent = '⚠ 裝置資訊已更新，但無法在檔案中找到完整的 ID 241 或 ID 245 寫入量數值。';
+                    fileUploadStatus.className = 'mt-3 text-sm font-semibold text-amber-600';
                     fileUploadStatus.classList.remove('hidden');
                 }
             };
